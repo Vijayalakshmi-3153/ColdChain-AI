@@ -6,7 +6,7 @@ COPY backend/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY backend/app ./app
-COPY ml/artifacts ./ml/artifacts
+COPY ml ./ml
 
 EXPOSE 8000
 
