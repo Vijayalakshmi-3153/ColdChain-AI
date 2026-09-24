@@ -1,0 +1,68 @@
+{
+  "features": [
+    "minimum_temperature",
+    "maximum_temperature",
+    "shelf_life_hours",
+    "q10",
+    "maximum_allowed_excursion_minutes",
+    "route_distance_km",
+    "temperature",
+    "humidity",
+    "door_open",
+    "battery_level",
+    "total_excursion_minutes",
+    "degree_minutes_outside_range",
+    "equivalent_age_hours",
+    "remaining_shelf_life_hours",
+    "percent_readings_outside_range",
+    "observed_max_temperature",
+    "observed_min_temperature",
+    "temperature_above_max",
+    "temperature_below_min",
+    "temperature_diff_mid",
+    "excursion_run_minutes",
+    "door_opens_so_far",
+    "temp_mean_4",
+    "temp_std_4",
+    "hum_mean_4",
+    "temp_mean_12",
+    "temp_std_12",
+    "hum_mean_12",
+    "distance_km_so_far",
+    "hour_sin",
+    "hour_cos",
+    "reading_index"
+  ],
+  "threshold": 0.6500000000000001,
+  "scale_pos_weight": 8.370517928286853,
+  "params": {
+    "n_estimators": 400,
+    "max_depth": 5,
+    "learning_rate": 0.05,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "min_child_weight": 5
+  },
+  "test_metrics": {
+    "n": 6048,
+    "positives": 573,
+    "threshold": 0.6500000000000001,
+    "accuracy": 0.8664021164021164,
+    "majority_baseline_accuracy": 0.9052579365079365,
+    "precision": 0.3547589616810878,
+    "recall": 0.5008726003490401,
+    "f1": 0.4153400868306802,
+    "pr_auc": 0.37029618729162017,
+    "confusion_matrix": [
+      [
+        4953,
+        522
+      ],
+      [
+        286,
+        287
+      ]
+    ]
+  },
+  "data_kind": "SYNTHETIC/DEMO"
+}

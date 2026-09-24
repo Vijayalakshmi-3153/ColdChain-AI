@@ -1,0 +1,57 @@
+[
+ {
+  "risk_level": "HIGH",
+  "risk_score": 0.51074,
+  "risk_percent": 51.07,
+  "risk_level_basis": "model+rule",
+  "model_risk_score": 0.74119,
+  "remaining_shelf_life_hours": 47.1395,
+  "readings_used": 17
+ },
+ {
+  "total_readings": 17,
+  "excursion_readings": 9,
+  "percent_readings_outside_range": 52.94,
+  "monitored_minutes": 50.98,
+  "total_excursion_minutes": 0.13,
+  "degree_minutes_outside_range": 0.14,
+  "max_temperature": 9.7,
+  "min_temperature": 3.79,
+  "reference_temperature": 4.0,
+  "q10": 2.5,
+  "equivalent_age_hours": 0.8605,
+  "remaining_shelf_life_hours": 47.1395,
+  "excursion_limit_minutes": 30.0,
+  "status": "warning"
+ },
+ "insufficient_data",
+ "insufficient_data",
+ "ok",
+ [
+  [
+   "HIGH_MODEL_RISK",
+   "warning"
+  ],
+  [
+   "TEMPERATURE_EXCURSION",
+   "warning"
+  ],
+  [
+   "FREQUENT_DOOR_OPENING",
+   "warning"
+  ],
+  [
+   "SHIPMENT_DELAYED",
+   "info"
+  ]
+ ],
+ [
+  "route_distance_km"
+ ],
+ {
+  "latitude": 28.617551,
+  "longitude": 77.21372,
+  "timestamp": "2026-09-23 01:12:25.884705+05:30",
+  "source": "telemetry"
+ }
+]

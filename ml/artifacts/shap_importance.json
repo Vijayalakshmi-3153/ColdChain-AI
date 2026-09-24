@@ -1,0 +1,135 @@
+{
+  "data_kind": "SYNTHETIC/DEMO",
+  "n_explained": 500,
+  "base_value": 0.0,
+  "importance": [
+    {
+      "feature": "temperature_diff_mid",
+      "mean_abs_shap": 0.4206662178039551
+    },
+    {
+      "feature": "total_excursion_minutes",
+      "mean_abs_shap": 0.3552915155887604
+    },
+    {
+      "feature": "observed_min_temperature",
+      "mean_abs_shap": 0.19642896950244904
+    },
+    {
+      "feature": "route_distance_km",
+      "mean_abs_shap": 0.14928781986236572
+    },
+    {
+      "feature": "maximum_temperature",
+      "mean_abs_shap": 0.12962894141674042
+    },
+    {
+      "feature": "maximum_allowed_excursion_minutes",
+      "mean_abs_shap": 0.07106602191925049
+    },
+    {
+      "feature": "door_opens_so_far",
+      "mean_abs_shap": 0.06696698069572449
+    },
+    {
+      "feature": "temp_std_4",
+      "mean_abs_shap": 0.062282495200634
+    },
+    {
+      "feature": "battery_level",
+      "mean_abs_shap": 0.05564897507429123
+    },
+    {
+      "feature": "percent_readings_outside_range",
+      "mean_abs_shap": 0.04694795235991478
+    },
+    {
+      "feature": "observed_max_temperature",
+      "mean_abs_shap": 0.04365311935544014
+    },
+    {
+      "feature": "degree_minutes_outside_range",
+      "mean_abs_shap": 0.039876487106084824
+    },
+    {
+      "feature": "remaining_shelf_life_hours",
+      "mean_abs_shap": 0.03689561039209366
+    },
+    {
+      "feature": "temp_mean_12",
+      "mean_abs_shap": 0.03667614609003067
+    },
+    {
+      "feature": "temp_std_12",
+      "mean_abs_shap": 0.030079232528805733
+    },
+    {
+      "feature": "equivalent_age_hours",
+      "mean_abs_shap": 0.02755257859826088
+    },
+    {
+      "feature": "hum_mean_12",
+      "mean_abs_shap": 0.026605144143104553
+    },
+    {
+      "feature": "temperature",
+      "mean_abs_shap": 0.02533501200377941
+    },
+    {
+      "feature": "reading_index",
+      "mean_abs_shap": 0.020428841933608055
+    },
+    {
+      "feature": "temp_mean_4",
+      "mean_abs_shap": 0.018885226920247078
+    },
+    {
+      "feature": "hum_mean_4",
+      "mean_abs_shap": 0.01580214500427246
+    },
+    {
+      "feature": "distance_km_so_far",
+      "mean_abs_shap": 0.014335674233734608
+    },
+    {
+      "feature": "shelf_life_hours",
+      "mean_abs_shap": 0.014271365478634834
+    },
+    {
+      "feature": "hour_cos",
+      "mean_abs_shap": 0.010207371786236763
+    },
+    {
+      "feature": "excursion_run_minutes",
+      "mean_abs_shap": 0.00800426583737135
+    },
+    {
+      "feature": "humidity",
+      "mean_abs_shap": 0.005702883470803499
+    },
+    {
+      "feature": "hour_sin",
+      "mean_abs_shap": 0.005394656676799059
+    },
+    {
+      "feature": "temperature_above_max",
+      "mean_abs_shap": 0.0048317378386855125
+    },
+    {
+      "feature": "minimum_temperature",
+      "mean_abs_shap": 0.0011850356822833419
+    },
+    {
+      "feature": "q10",
+      "mean_abs_shap": 0.00045821635285392404
+    },
+    {
+      "feature": "door_open",
+      "mean_abs_shap": 4.819094101549126e-05
+    },
+    {
+      "feature": "temperature_below_min",
+      "mean_abs_shap": 0.0
+    }
+  ]
+}

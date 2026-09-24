@@ -1,0 +1,26 @@
+{
+  "seq_len": 48,
+  "horizon": 6,
+  "features": [
+    "temperature",
+    "humidity"
+  ],
+  "epochs": 6,
+  "windows": {
+    "train": 12642,
+    "val": 2709,
+    "test": 2709
+  },
+  "test_metrics": {
+    "temperature": {
+      "rmse": 0.5457740157962405,
+      "mae": 0.3815129611250661
+    },
+    "humidity": {
+      "rmse": 2.081755254335384,
+      "mae": 1.6624768684856284
+    }
+  },
+  "data_kind": "SYNTHETIC/DEMO",
+  "note": "Development metrics on synthetic data; not real-world validation."
+}

@@ -1,0 +1,24 @@
+{
+  "threshold": 0.12202528864145279,
+  "val_normal_mean_score": 0.049237754195928574,
+  "test_normal_mean_score": 0.05017885938286781,
+  "test_excursion_mean_score": 0.09054556488990784,
+  "excursion_detection_rate": 0.27332361516034986,
+  "test_normal_false_positive_rate": 0.06662534862101023,
+  "seq_len": 24,
+  "channels": [
+    "temperature",
+    "humidity"
+  ],
+  "quantile": 0.95,
+  "channel_mean": [
+    0.5418541431427002,
+    0.6310306787490845
+  ],
+  "channel_std": [
+    0.21150337159633636,
+    0.1850089132785797
+  ],
+  "data_kind": "SYNTHETIC/DEMO",
+  "note": "Scores/threshold from SYNTHETIC data - pipeline check only."
+}

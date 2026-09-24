@@ -1,0 +1,33 @@
+# ColdChain AI backend dependencies
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+pydantic==2.9.2
+python-dotenv==1.0.1
+python-multipart==0.0.12
+
+# --- Database (Step 2) ---
+sqlalchemy==2.0.36
+psycopg2-binary==2.9.10
+pydantic-settings==2.6.0
+alembic==1.13.3
+
+# --- IoT / MQTT (Step 3) ---
+paho-mqtt==2.1.0
+
+# --- ML serving (Step 5) ---
+# Reuse the Step 4 artifacts, never retrain during serving.
+xgboost==2.1.1
+shap==0.46.0
+tensorflow-cpu==2.18.0
+pandas==2.2.3
+numpy==2.1.1
+pillow==10.4.0
+
+# --- Tests (Step 3) ---
+pytest==8.3.3
+httpx==0.27.2
+
+# These will be used in later steps (chatbot, storage, etc.).
+# redis==5.0.8
+# minio==7.2.7
+# openai==1.51.0

@@ -1,0 +1,565 @@
+{
+  "note": "SHAP on SYNTHETIC/DEMO data; explanations are per-prediction factors increasing/decreasing spoilage risk.",
+  "predictions": [
+    {
+      "row_in_test": 62,
+      "risk_probability": 0.8920446634292603,
+      "contributions": [
+        {
+          "feature": "temperature_diff_mid",
+          "shap_value": 0.7674834132194519,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "total_excursion_minutes",
+          "shap_value": 0.4498376250267029,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "temp_std_4",
+          "shap_value": 0.33861374855041504,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "degree_minutes_outside_range",
+          "shap_value": 0.27428460121154785,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "percent_readings_outside_range",
+          "shap_value": -0.20878776907920837,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "maximum_temperature",
+          "shap_value": 0.1853323131799698,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "excursion_run_minutes",
+          "shap_value": 0.16997551918029785,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "equivalent_age_hours",
+          "shap_value": 0.16676434874534607,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "temp_mean_12",
+          "shap_value": -0.06601611524820328,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "door_opens_so_far",
+          "shap_value": 0.06316058337688446,
+          "effect": "increases_risk"
+        }
+      ]
+    },
+    {
+      "row_in_test": 270,
+      "risk_probability": 0.8871284127235413,
+      "contributions": [
+        {
+          "feature": "temperature_diff_mid",
+          "shap_value": 0.6465522646903992,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "total_excursion_minutes",
+          "shap_value": 0.48871880769729614,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "temp_std_4",
+          "shap_value": 0.2724649906158447,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "degree_minutes_outside_range",
+          "shap_value": 0.2589612603187561,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "equivalent_age_hours",
+          "shap_value": 0.193185493350029,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "percent_readings_outside_range",
+          "shap_value": -0.1852068454027176,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "excursion_run_minutes",
+          "shap_value": 0.16102099418640137,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "maximum_temperature",
+          "shap_value": 0.14966091513633728,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "observed_min_temperature",
+          "shap_value": 0.10965629667043686,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "battery_level",
+          "shap_value": -0.07721416652202606,
+          "effect": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "row_in_test": 265,
+      "risk_probability": 0.8870795369148254,
+      "contributions": [
+        {
+          "feature": "temp_std_4",
+          "shap_value": 0.43342524766921997,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "total_excursion_minutes",
+          "shap_value": 0.38714757561683655,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "degree_minutes_outside_range",
+          "shap_value": 0.2686748504638672,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "observed_min_temperature",
+          "shap_value": 0.17697878181934357,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "temperature_diff_mid",
+          "shap_value": 0.17641839385032654,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "excursion_run_minutes",
+          "shap_value": 0.14203572273254395,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "temp_std_12",
+          "shap_value": 0.11610184609889984,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "route_distance_km",
+          "shap_value": 0.11592505872249603,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "temperature",
+          "shap_value": 0.04587623476982117,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "maximum_temperature",
+          "shap_value": 0.038229234516620636,
+          "effect": "increases_risk"
+        }
+      ]
+    },
+    {
+      "row_in_test": 77,
+      "risk_probability": 0.8861774206161499,
+      "contributions": [
+        {
+          "feature": "temperature_diff_mid",
+          "shap_value": 0.7679880857467651,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "temp_std_4",
+          "shap_value": 0.36141467094421387,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "total_excursion_minutes",
+          "shap_value": 0.3340202569961548,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "degree_minutes_outside_range",
+          "shap_value": 0.2245119959115982,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "percent_readings_outside_range",
+          "shap_value": -0.2142609804868698,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "equivalent_age_hours",
+          "shap_value": 0.18648451566696167,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "maximum_temperature",
+          "shap_value": 0.1853323131799698,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "excursion_run_minutes",
+          "shap_value": 0.15313172340393066,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "temp_mean_12",
+          "shap_value": -0.08442973345518112,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "door_opens_so_far",
+          "shap_value": 0.06314117461442947,
+          "effect": "increases_risk"
+        }
+      ]
+    },
+    {
+      "row_in_test": 471,
+      "risk_probability": 0.8792649507522583,
+      "contributions": [
+        {
+          "feature": "temperature_diff_mid",
+          "shap_value": 0.9963477253913879,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "temp_std_4",
+          "shap_value": 0.44797003269195557,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "total_excursion_minutes",
+          "shap_value": 0.34686943888664246,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "degree_minutes_outside_range",
+          "shap_value": 0.30418655276298523,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "observed_min_temperature",
+          "shap_value": -0.2165818065404892,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "excursion_run_minutes",
+          "shap_value": 0.1640089750289917,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "maximum_temperature",
+          "shap_value": -0.10984820872545242,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "route_distance_km",
+          "shap_value": 0.10798779875040054,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "battery_level",
+          "shap_value": -0.06929237395524979,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "hum_mean_12",
+          "shap_value": 0.061732202768325806,
+          "effect": "increases_risk"
+        }
+      ]
+    },
+    {
+      "row_in_test": 292,
+      "risk_probability": 0.8785024285316467,
+      "contributions": [
+        {
+          "feature": "temp_std_4",
+          "shap_value": 0.47369158267974854,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "total_excursion_minutes",
+          "shap_value": 0.270997017621994,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "degree_minutes_outside_range",
+          "shap_value": 0.19821855425834656,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "temperature_diff_mid",
+          "shap_value": 0.17434582114219666,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "equivalent_age_hours",
+          "shap_value": 0.17156580090522766,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "excursion_run_minutes",
+          "shap_value": 0.15604029595851898,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "observed_min_temperature",
+          "shap_value": 0.14858543872833252,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "percent_readings_outside_range",
+          "shap_value": -0.1355714499950409,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "temp_std_12",
+          "shap_value": 0.11697010695934296,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "route_distance_km",
+          "shap_value": 0.1152561604976654,
+          "effect": "increases_risk"
+        }
+      ]
+    },
+    {
+      "row_in_test": 87,
+      "risk_probability": 0.8611039519309998,
+      "contributions": [
+        {
+          "feature": "total_excursion_minutes",
+          "shap_value": 0.4078042805194855,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "observed_min_temperature",
+          "shap_value": 0.36041852831840515,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "temp_std_4",
+          "shap_value": 0.3375736176967621,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "degree_minutes_outside_range",
+          "shap_value": 0.2756541669368744,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "route_distance_km",
+          "shap_value": -0.22157324850559235,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "equivalent_age_hours",
+          "shap_value": 0.175693079829216,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "excursion_run_minutes",
+          "shap_value": 0.13446655869483948,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "temp_std_12",
+          "shap_value": 0.13017521798610687,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "temperature_diff_mid",
+          "shap_value": 0.12217867374420166,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "maximum_allowed_excursion_minutes",
+          "shap_value": -0.0739242434501648,
+          "effect": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "row_in_test": 488,
+      "risk_probability": 0.8465986251831055,
+      "contributions": [
+        {
+          "feature": "temperature_diff_mid",
+          "shap_value": 1.1443283557891846,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "total_excursion_minutes",
+          "shap_value": 0.3478756844997406,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "observed_max_temperature",
+          "shap_value": 0.15884485840797424,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "maximum_temperature",
+          "shap_value": -0.1173107847571373,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "door_opens_so_far",
+          "shap_value": 0.11114933341741562,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "percent_readings_outside_range",
+          "shap_value": 0.09294752031564713,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "route_distance_km",
+          "shap_value": -0.07686490565538406,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "battery_level",
+          "shap_value": 0.06794373691082001,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "maximum_allowed_excursion_minutes",
+          "shap_value": 0.04953037202358246,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "remaining_shelf_life_hours",
+          "shap_value": -0.04927612096071243,
+          "effect": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "row_in_test": 57,
+      "risk_probability": 0.8360593318939209,
+      "contributions": [
+        {
+          "feature": "temperature_diff_mid",
+          "shap_value": 0.6945546865463257,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "total_excursion_minutes",
+          "shap_value": 0.2638690173625946,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "maximum_temperature",
+          "shap_value": 0.25497865676879883,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "observed_min_temperature",
+          "shap_value": 0.14556963741779327,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "route_distance_km",
+          "shap_value": -0.1269768625497818,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "door_opens_so_far",
+          "shap_value": 0.11575165390968323,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "maximum_allowed_excursion_minutes",
+          "shap_value": 0.07919830828905106,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "battery_level",
+          "shap_value": 0.07423081248998642,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "percent_readings_outside_range",
+          "shap_value": 0.03953946754336357,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "temp_mean_12",
+          "shap_value": 0.032230839133262634,
+          "effect": "increases_risk"
+        }
+      ]
+    },
+    {
+      "row_in_test": 71,
+      "risk_probability": 0.82966148853302,
+      "contributions": [
+        {
+          "feature": "temperature_diff_mid",
+          "shap_value": 0.6466414928436279,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "total_excursion_minutes",
+          "shap_value": 0.26205483078956604,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "maximum_temperature",
+          "shap_value": 0.26154860854148865,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "observed_min_temperature",
+          "shap_value": 0.14742086827754974,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "route_distance_km",
+          "shap_value": -0.12941974401474,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "door_opens_so_far",
+          "shap_value": 0.11592280864715576,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "maximum_allowed_excursion_minutes",
+          "shap_value": 0.07919830828905106,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "battery_level",
+          "shap_value": 0.07273618131875992,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "percent_readings_outside_range",
+          "shap_value": 0.04102052375674248,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "remaining_shelf_life_hours",
+          "shap_value": 0.037143390625715256,
+          "effect": "increases_risk"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+# --- Secrets / environment ---
+.env
+*.env
+!.env.example
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# --- Node / Vite ---
+node_modules/
+dist/
+npm-debug.log*
+
+# --- Data & ML artifacts ---
+data/raw/
+data/processed/
+data/models/
+data/packaging/
+ml/models/*.bin
+ml/models/*.joblib
+ml/models/*.ubj
+ml/data/images/
+*.pkl
+*.h5
+*.keras
+*.ubj
+*.onnx
+# Allow ColdChain AI ML artifacts
+!ml/artifacts/
+!ml/artifacts/*
+# --- Logs & OS ---
+*.log
+logs/
+.DS_Store
+Thumbs.db
+
+# --- Editors / IDE ---
+.vscode/
+.idea/
+
+# --- Local Mosquitto install (downloaded during setup) ---
+infra/mosquitto-installer.exe
+infra/mosquitto-broker/

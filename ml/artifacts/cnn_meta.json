@@ -1,0 +1,16 @@
+{
+  "classes": [
+    "ok",
+    "seal_damaged",
+    "insulation_compromised",
+    "wet_condensation",
+    "crushed"
+  ],
+  "image_size": 96,
+  "epochs": 8,
+  "val_accuracy": 1.0,
+  "n_train": 200,
+  "n_val": 60,
+  "data_kind": "DEMO/SYNTHETIC images",
+  "note": "Replace demo images with real labeled photos for real validation."
+}
