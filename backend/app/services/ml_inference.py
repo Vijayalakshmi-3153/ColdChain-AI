@@ -47,7 +47,7 @@ import numpy as np
 from ..config import get_settings
 
 # E:\AI-final\backend\app\services\ml_inference.py -> E:\AI-final
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 # The ML package lives at the project root; make it importable when the
 # backend is started from `backend/` (e.g. uvicorn app.main:app).
