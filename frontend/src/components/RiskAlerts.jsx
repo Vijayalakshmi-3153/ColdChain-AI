@@ -10,12 +10,13 @@ export const RiskAlerts = ({ shipmentId }) => {
 
   useEffect(() => {
     if (shipmentId == null) return;
+
     setLoading(true);
-    axios
-      fetchAlerts(shipmentId)
+    setError(null);
+
+    fetchAlerts(shipmentId)
       .then((res) => {
-        setAlerts(Array.isArray(res.data) ? res.data : []);
-        setError(null);
+        setAlerts(Array.isArray(res) ? res : []);
       })
       .catch((err) => {
         setError(err?.message || "Unable to fetch live alerts from server");
@@ -24,9 +25,25 @@ export const RiskAlerts = ({ shipmentId }) => {
       .finally(() => setLoading(false));
   }, [shipmentId]);
 
-  if (loading) return <div className="data-empty-hint">Loading alerts registry from database...</div>;
-  if (error) return <div className="app-banner-error">{error}</div>;
-  if (!alerts.length) return <div className="data-empty-hint">No active or historical alerts recorded for this shipment.</div>;
+  if (loading) {
+    return (
+      <div className="data-empty-hint">
+        Loading alerts registry from database...
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="app-banner-error">{error}</div>;
+  }
+
+  if (!alerts.length) {
+    return (
+      <div className="data-empty-hint">
+        No active or historical alerts recorded for this shipment.
+      </div>
+    );
+  }
 
   return (
     <div className="modern-table-responsive">
@@ -41,32 +58,51 @@ export const RiskAlerts = ({ shipmentId }) => {
             <th>Timestamp</th>
           </tr>
         </thead>
+
         <tbody>
           {alerts.map((a) => {
             const sev = String(a.severity || "info").toLowerCase();
+
             return (
               <tr key={a.id}>
                 <td>
-                  <strong className="alert-type-name">{a.alert_type}</strong>
+                  <strong className="alert-type-name">
+                    {a.alert_type}
+                  </strong>
                 </td>
+
                 <td>
                   <span className={`alert-severity-badge sev-${sev}`}>
                     {a.severity || "INFO"}
                   </span>
                 </td>
+
                 <td>
-                  <span className="alert-msg-text">{a.message}</span>
+                  <span className="alert-msg-text">
+                    {a.message}
+                  </span>
                 </td>
+
                 <td>
-                  <span className="alert-action-text">{a.recommended_action || "—"}</span>
+                  <span className="alert-action-text">
+                    {a.recommended_action || "—"}
+                  </span>
                 </td>
+
                 <td>
-                  <span className={`ack-pill ${a.acknowledged ? "ack-yes" : "ack-no"}`}>
+                  <span
+                    className={`ack-pill ${
+                      a.acknowledged ? "ack-yes" : "ack-no"
+                    }`}
+                  >
                     {a.acknowledged ? "Resolved" : "Pending"}
                   </span>
                 </td>
+
                 <td>
-                  <span className="time-cell">{fmtTime(a.created_at)}</span>
+                  <span className="time-cell">
+                    {fmtTime(a.created_at)}
+                  </span>
                 </td>
               </tr>
             );

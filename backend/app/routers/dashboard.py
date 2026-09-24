@@ -2,11 +2,12 @@
 Dashboard API (Phase A, Step 5).
 GET /dashboard/summary | /dashboard/shipments | /dashboard/map
 
-All required PostgreSQL data is loaded before ML inference so the
-database connection is not held while expensive ML models run.
+Database records are copied into lightweight objects before ML inference
+so PostgreSQL connections are not held during expensive model execution.
 """
 
 from datetime import datetime, timezone
+from types import SimpleNamespace
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -28,7 +29,75 @@ def _get(source, name):
     """Read a field from either a dict or an object."""
     if isinstance(source, dict):
         return source.get(name)
+
     return getattr(source, name, None)
+
+
+def _copy_product(product):
+    """
+    Copy only the Product fields required by the ML/risk pipeline.
+
+    This prevents SQLAlchemy lazy-loading after the DB session is released.
+    """
+    if product is None:
+        return None
+
+    return SimpleNamespace(
+        id=product.id,
+        name=product.name,
+        category=product.category,
+        minimum_temperature=product.minimum_temperature,
+        maximum_temperature=product.maximum_temperature,
+        minimum_humidity=product.minimum_humidity,
+        maximum_humidity=product.maximum_humidity,
+        shelf_life_hours=product.shelf_life_hours,
+        q10=product.q10,
+        maximum_allowed_excursion_minutes=(
+            product.maximum_allowed_excursion_minutes
+        ),
+        packaging_class=product.packaging_class,
+        created_at=product.created_at,
+    )
+
+
+def _copy_shipment(shipment):
+    """
+    Copy only Shipment fields required by the dashboard/risk pipeline.
+    """
+    return SimpleNamespace(
+        id=shipment.id,
+        product_id=shipment.product_id,
+        origin=shipment.origin,
+        destination=shipment.destination,
+        vehicle_id=shipment.vehicle_id,
+        status=shipment.status,
+        start_time=shipment.start_time,
+        estimated_arrival_time=shipment.estimated_arrival_time,
+        latitude=shipment.latitude,
+        longitude=shipment.longitude,
+        packaging_image_path=shipment.packaging_image_path,
+        packaging_result=shipment.packaging_result,
+        created_at=shipment.created_at,
+    )
+
+
+def _copy_telemetry(reading):
+    """
+    Copy one Telemetry row while preserving its ID.
+
+    risk_service._cache_key() requires reading.id.
+    """
+    return SimpleNamespace(
+        id=reading.id,
+        shipment_id=reading.shipment_id,
+        timestamp=reading.timestamp,
+        temperature=reading.temperature,
+        humidity=reading.humidity,
+        latitude=reading.latitude,
+        longitude=reading.longitude,
+        battery_level=reading.battery_level,
+        door_open=reading.door_open,
+    )
 
 
 def _row_from_assessment(
@@ -57,7 +126,11 @@ def _row_from_assessment(
         "status": shipment.status,
         "product_id": shipment.product_id,
         "product_name": getattr(product, "name", None) if product else None,
-        "product_category": getattr(product, "category", None) if product else None,
+        "product_category": (
+            getattr(product, "category", None)
+            if product
+            else None
+        ),
         "temperature": _get(latest, "temperature"),
         "humidity": _get(latest, "humidity"),
         "door_open": _get(latest, "door_open"),
@@ -74,7 +147,9 @@ def _row_from_assessment(
         "remaining_shelf_life_hours": metrics.get(
             "remaining_shelf_life_hours"
         ),
-        "anomaly_status": (assessment.get("anomaly") or {}).get("status"),
+        "anomaly_status": (
+            assessment.get("anomaly") or {}
+        ).get("status"),
         "active_alerts": active_alerts,
         "latitude": _get(position, "latitude"),
         "longitude": _get(position, "longitude"),
@@ -85,17 +160,18 @@ def _row_from_assessment(
 
 def _assess_all(db: Session, limit: int):
     """
-    Load PostgreSQL data first, release the DB transaction, then
-    perform ML inference.
+    Load all required PostgreSQL data first.
 
-    The original ORM telemetry rows are intentionally preserved because
-    risk_service._cache_key() requires the telemetry row ID.
+    After the database reads are complete, convert ORM objects to
+    lightweight detached objects and explicitly close the transaction
+    before running expensive ML inference.
     """
 
     # ---------------------------------------------------------
-    # STEP 1: Load shipments
+    # 1. READ SHIPMENTS FROM DATABASE
     # ---------------------------------------------------------
-    shipments = crud.get_shipments(
+
+    shipments_db = crud.get_shipments(
         db,
         skip=0,
         limit=limit,
@@ -104,29 +180,29 @@ def _assess_all(db: Session, limit: int):
     prepared = []
 
     # ---------------------------------------------------------
-    # STEP 2: Load everything needed from PostgreSQL.
+    # 2. READ ALL REQUIRED DATABASE DATA
     # ---------------------------------------------------------
-    for shipment in shipments:
 
-        product = crud.get_product(
+    for shipment_db in shipments_db:
+        product_db = crud.get_product(
             db,
-            shipment.product_id,
+            shipment_db.product_id,
         )
 
         try:
-            telemetry_rows = crud.get_telemetry_for_shipment(
+            telemetry_db = crud.get_telemetry_for_shipment(
                 db,
-                shipment.id,
+                shipment_db.id,
                 skip=0,
                 limit=int(settings.ml_max_readings_per_shipment),
             )
         except Exception:
-            telemetry_rows = []
+            telemetry_db = []
 
         try:
             alerts = crud.get_alerts_for_shipment(
                 db,
-                shipment.id,
+                shipment_db.id,
                 skip=0,
                 limit=1000,
             )
@@ -140,33 +216,52 @@ def _assess_all(db: Session, limit: int):
         except Exception:
             active_alerts = 0
 
+        # -----------------------------------------------------
+        # 3. COPY ORM OBJECTS WHILE DB SESSION IS STILL ACTIVE
+        # -----------------------------------------------------
+
+        shipment = _copy_shipment(shipment_db)
+        product = _copy_product(product_db)
+
+        telemetry = [
+            _copy_telemetry(reading)
+            for reading in telemetry_db
+        ]
+
         prepared.append(
             {
                 "shipment": shipment,
                 "product": product,
-                "telemetry": telemetry_rows,
+                "telemetry": telemetry,
                 "active_alerts": active_alerts,
             }
         )
 
     # ---------------------------------------------------------
-    # STEP 3: Release the PostgreSQL connection.
-    #
-    # The ML inference below can be expensive, so we do not want
-    # the database connection to remain checked out during it.
+    # 4. RELEASE DATABASE CONNECTION BEFORE ML
     # ---------------------------------------------------------
+
     try:
         db.rollback()
     except Exception:
         pass
 
+    # Explicitly close the current SQLAlchemy session connection.
+    #
+    # FastAPI will also call db.close() at the end of the request,
+    # but this releases the connection BEFORE expensive ML inference.
+    try:
+        db.close()
+    except Exception:
+        pass
+
     # ---------------------------------------------------------
-    # STEP 4: Run the existing risk/ML pipeline.
+    # 5. RUN ML USING ONLY DETACHED OBJECTS
     # ---------------------------------------------------------
+
     rows = []
 
     for item in prepared:
-
         shipment = item["shipment"]
         product = item["product"]
         telemetry_rows = item["telemetry"]
@@ -174,7 +269,7 @@ def _assess_all(db: Session, limit: int):
 
         try:
             assessment = risk_service.assess_shipment(
-                db,
+                None,
                 shipment,
                 product=product,
                 readings=telemetry_rows,
@@ -183,15 +278,12 @@ def _assess_all(db: Session, limit: int):
             )
 
         except Exception as exc:
-
             assessment = {
                 "risk_level": "UNKNOWN",
                 "risk_score": None,
                 "model_risk_score": None,
                 "exposure": None,
-                "anomaly": {
-                    "status": "error"
-                },
+                "anomaly": {"status": "error"},
                 "latest_reading": None,
                 "position": None,
                 "readings_used": 0,
@@ -209,18 +301,16 @@ def _assess_all(db: Session, limit: int):
             )
         )
 
-    return shipments, rows
+    return prepared, rows
 
 
 @router.get("/summary")
 def dashboard_summary(
     db: Session = Depends(get_db),
 ):
-    """Summary cards computed live from PostgreSQL."""
-
     limit = int(settings.dashboard_max_shipments)
 
-    shipments, rows = _assess_all(
+    prepared, rows = _assess_all(
         db,
         limit,
     )
@@ -234,24 +324,14 @@ def dashboard_summary(
     }
 
     for row in rows:
-
-        level = row.get(
-            "risk_level",
-            "UNKNOWN",
-        )
-
-        breakdown[level] = (
-            breakdown.get(level, 0) + 1
-        )
+        level = row.get("risk_level", "UNKNOWN")
+        breakdown[level] = breakdown.get(level, 0) + 1
 
     active = [
-        shipment
-        for shipment in shipments
-        if str(shipment.status).lower()
-        in ACTIVE_STATUSES
-    ]
-
-    # Alert counts were loaded before ML inference.
+    item["shipment"]
+    for item in prepared
+    if str(item["shipment"].status).lower() in ACTIVE_STATUSES
+]
     active_alerts = sum(
         int(row.get("active_alerts") or 0)
         for row in rows
@@ -270,13 +350,13 @@ def dashboard_summary(
         "Risk blends XGBoost MODEL OUTPUT with RULE-BASED exposure severity.",
     ]
 
-    if len(shipments) >= limit:
+    if len(prepared) >= limit:
         notes.append(
             f"Capped at {limit} shipments (DASHBOARD_MAX_SHIPMENTS)."
         )
 
     return {
-        "total_shipments": len(shipments),
+        "total_shipments": len(prepared),
         "active_shipments": len(active),
         "high_or_critical_risk": (
             breakdown.get("HIGH", 0)
@@ -284,25 +364,22 @@ def dashboard_summary(
         ),
         "active_alerts": active_alerts,
         "risk_breakdown": breakdown,
-        "active_statuses": sorted(
-            {
-                str(shipment.status)
-                for shipment in active
-            }
-        ),
+       "active_statuses": sorted(
+    {
+        str(item.status)
+        for item in active
+    }
+),
         "shipments_assessed": assessed,
         "generated_at": datetime.now(timezone.utc),
-        "ml_available": ml.get(
-            "available",
-            [],
-        ),
-        "ml_unavailable": ml.get(
-            "unavailable",
-            [],
-        ),
+        "ml_available": ml.get("available", []),
+        "ml_unavailable": ml.get("unavailable", []),
         "data_sources": {
             "telemetry": "REAL data from PostgreSQL",
-            "risk": "MODEL OUTPUT (SYNTHETIC/DEMO) + RULE-BASED OUTPUT",
+            "risk": (
+                "MODEL OUTPUT (SYNTHETIC/DEMO) "
+                "+ RULE-BASED OUTPUT"
+            ),
         },
         "notes": notes,
     }
@@ -310,15 +387,9 @@ def dashboard_summary(
 
 @router.get("/shipments")
 def dashboard_shipments(
-    limit: int = Query(
-        50,
-        ge=1,
-        le=200,
-    ),
+    limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
 ):
-    """One assessed row per shipment for the dashboard table."""
-
     cap = min(
         int(limit),
         int(settings.dashboard_max_shipments),
@@ -336,8 +407,6 @@ def dashboard_shipments(
 def dashboard_map(
     db: Session = Depends(get_db),
 ):
-    """Live map payload with assessed shipments and coordinates."""
-
     _, rows = _assess_all(
         db,
         int(settings.dashboard_max_shipments),
@@ -352,7 +421,6 @@ def dashboard_map(
     latest_ts = None
 
     for row in rows:
-
         ts = row.get("last_updated")
 
         if ts is not None and (
@@ -364,7 +432,10 @@ def dashboard_map(
     notes = [
         "Positions come from latest telemetry GPS, else shipment record.",
         "Origin/destination are place names (no geocoding in Step 5).",
-        f"{len(with_coords)} of {len(rows)} shipments have coordinates.",
+        (
+            f"{len(with_coords)} of {len(rows)} "
+            "shipments have coordinates."
+        ),
     ]
 
     return {
