@@ -16,7 +16,7 @@ paho-mqtt==2.1.0
 
 # --- ML serving (Step 5) ---
 # Reuse the Step 4 artifacts, never retrain during serving.
-xgboost==3.4.1
+xgboost==3.2.0
 shap==0.46.0
 tensorflow-cpu==2.18.0
 pandas==2.2.3
