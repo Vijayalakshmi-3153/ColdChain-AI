@@ -347,6 +347,11 @@ class MLRegistry:
             return self.summary()
 
         print(f"[ml] artifacts dir: {self.artifacts_dir}")
+        print(f"[ml] PROJECT_ROOT: {PROJECT_ROOT}")
+        print(f"[ml] DEFAULT_ARTIFACTS_DIR: {DEFAULT_ARTIFACTS_DIR}")
+        print(f"[ml] xgboost model exists: {self.artifact_path('xgboost_spoilage.ubj').exists()}")
+        print(f"[ml] xgboost features exists: {self.artifact_path('xgboost_features.json').exists()}")
+        print(f"[ml] artifact files: {[p.name for p in self.artifacts_dir.iterdir()] if self.artifacts_dir.exists() else 'DIRECTORY NOT FOUND'}")
         for name in ("xgboost", "lstm", "autoencoder", "cnn", "shap"):
             present, missing = self.files_present(name)
             st = self._status[name]
