@@ -1,3 +1,4 @@
+
 """
 Shipment-aware demo chatbot (no new ML pipeline).
 
@@ -53,6 +54,7 @@ def compact_context(payload: dict[str, Any], alerts: list) -> dict[str, Any]:
 
     recs = payload.get("recommendations") or []
     factors = payload.get("shap_top_factors") or []
+
     return {
         "project": PROJECT_OVERVIEW,
         "shipment_id": payload.get("shipment_id"),
@@ -75,9 +77,13 @@ def compact_context(payload: dict[str, Any], alerts: list) -> dict[str, Any]:
         "latest_humidity": latest.get("humidity"),
         "latest_battery": latest.get("battery_level"),
         "door_open": latest.get("door_open"),
+        "latitude": latest.get("latitude"),
+        "longitude": latest.get("longitude"),
         "exposure_status": exposure.get("status"),
         "total_excursion_minutes": exposure.get("total_excursion_minutes"),
-        "percent_readings_outside_range": exposure.get("percent_readings_outside_range"),
+        "percent_readings_outside_range": exposure.get(
+            "percent_readings_outside_range"
+        ),
         "remaining_shelf_life_hours": payload.get("remaining_shelf_life_hours"),
         "equivalent_age_hours": exposure.get("equivalent_age_hours"),
         "lstm": {
@@ -100,9 +106,21 @@ def compact_context(payload: dict[str, Any], alerts: list) -> dict[str, Any]:
         },
         "shap_top_factors": [
             {
-                "feature": f.get("feature") if isinstance(f, dict) else getattr(f, "feature", None),
-                "effect": f.get("effect") if isinstance(f, dict) else getattr(f, "effect", None),
-                "shap_value": f.get("shap_value") if isinstance(f, dict) else getattr(f, "shap_value", None),
+                "feature": (
+                    f.get("feature")
+                    if isinstance(f, dict)
+                    else getattr(f, "feature", None)
+                ),
+                "effect": (
+                    f.get("effect")
+                    if isinstance(f, dict)
+                    else getattr(f, "effect", None)
+                ),
+                "shap_value": (
+                    f.get("shap_value")
+                    if isinstance(f, dict)
+                    else getattr(f, "shap_value", None)
+                ),
             }
             for f in factors[:8]
         ],
@@ -117,10 +135,26 @@ def compact_context(payload: dict[str, Any], alerts: list) -> dict[str, Any]:
         ],
         "recommendations": [
             {
-                "code": r.get("code") if isinstance(r, dict) else getattr(r, "code", None),
-                "severity": r.get("severity") if isinstance(r, dict) else getattr(r, "severity", None),
-                "action": r.get("action") if isinstance(r, dict) else getattr(r, "action", None),
-                "reason": r.get("reason") if isinstance(r, dict) else getattr(r, "reason", None),
+                "code": (
+                    r.get("code")
+                    if isinstance(r, dict)
+                    else getattr(r, "code", None)
+                ),
+                "severity": (
+                    r.get("severity")
+                    if isinstance(r, dict)
+                    else getattr(r, "severity", None)
+                ),
+                "action": (
+                    r.get("action")
+                    if isinstance(r, dict)
+                    else getattr(r, "action", None)
+                ),
+                "reason": (
+                    r.get("reason")
+                    if isinstance(r, dict)
+                    else getattr(r, "reason", None)
+                ),
             }
             for r in recs[:8]
         ],
@@ -131,9 +165,12 @@ def compact_context(payload: dict[str, Any], alerts: list) -> dict[str, Any]:
 def load_shipment_context(db, shipment_id: int) -> dict[str, Any] | None:
     """Read-only: existing assessment + alerts. Does not raise alerts or train."""
     shipment = crud.get_shipment(db, shipment_id)
+
     if shipment is None:
         return None
+
     product = crud.get_product(db, shipment.product_id)
+
     assessment = risk_service.assess_shipment(
         db,
         shipment,
@@ -142,43 +179,301 @@ def load_shipment_context(db, shipment_id: int) -> dict[str, Any] | None:
         use_cache=True,
         raise_alerts=False,
     )
+
     payload = risk_service.to_api_payload(assessment)
-    alerts = crud.get_alerts_for_shipment(db, shipment_id, skip=0, limit=20)
+
+    alerts = crud.get_alerts_for_shipment(
+        db,
+        shipment_id,
+        skip=0,
+        limit=20,
+    )
+
     return compact_context(payload, alerts)
 
 
 def fallback_reply(message: str, context: dict[str, Any] | None) -> str:
     """Deterministic demo answers from live context when OpenAI is unavailable."""
-    q = message.lower()
-    parts: list[str] = []
+
+    q = message.lower().strip()
 
     if context is None:
-        parts.append(PROJECT_OVERVIEW)
-        parts.append(
+        return (
             "No shipment is selected. Open a shipment on the dashboard, or send "
-            "shipment_id in the request, for live risk, alerts, and ML results."
+            "shipment_id in the request, for live shipment information."
         )
-        return "\n\n".join(parts)
 
     sid = context.get("shipment_id")
-    wants_risk = any(w in q for w in ("risk", "why", "spoil", "score"))
-    wants_pack = any(w in q for w in ("packag", "cnn", "image", "seal", "crush"))
-    wants_anom = any(w in q for w in ("anomal", "autoencoder", "unusual"))
-    wants_rec = any(w in q for w in ("recommend", "action", "what should", "reroute"))
+
+    # ---------------------------------------------------------
+    # Specific field questions
+    # ---------------------------------------------------------
+
+    wants_location = any(
+        phrase in q
+        for phrase in (
+            "location",
+            "where is",
+            "where's",
+            "where are",
+            "current location",
+            "located",
+            "position",
+        )
+    )
+
+    wants_temperature = any(
+        phrase in q
+        for phrase in (
+            "temperature",
+            "temp",
+            "current temp",
+        )
+    )
+
+    wants_humidity = any(
+        phrase in q
+        for phrase in (
+            "humidity",
+            "humid",
+        )
+    )
+
+    wants_battery = any(
+        phrase in q
+        for phrase in (
+            "battery",
+            "battery level",
+            "power level",
+        )
+    )
+
+    wants_status = any(
+        phrase in q
+        for phrase in (
+            "status",
+            "shipment status",
+            "current status",
+        )
+    )
+
+    # ---------------------------------------------------------
+    # Existing detailed intents
+    # ---------------------------------------------------------
+
+    wants_risk = any(
+        w in q
+        for w in (
+            "risk",
+            "spoil",
+            "score",
+        )
+    )
+
+    wants_pack = any(
+        w in q
+        for w in (
+            "packag",
+            "cnn",
+            "image",
+            "seal",
+            "crush",
+        )
+    )
+
+    wants_anom = any(
+        w in q
+        for w in (
+            "anomal",
+            "autoencoder",
+            "unusual",
+        )
+    )
+
+    wants_rec = any(
+        w in q
+        for w in (
+            "recommend",
+            "action",
+            "what should",
+            "reroute",
+        )
+    )
+
     wants_alert = "alert" in q
-    wants_lstm = any(w in q for w in ("forecast", "lstm", "predict"))
-    wants_shap = any(w in q for w in ("shap", "factor", "explain"))
-    wants_exp = any(w in q for w in ("expos", "shelf", "excursion", "expir"))
-    wants_temp = any(w in q for w in ("temp", "humid"))
-    wants_general = any(w in q for w in ("what is", "coldchain", "this system", "project"))
 
-    specific = wants_risk or wants_pack or wants_anom or wants_rec or wants_alert or wants_lstm or wants_shap or wants_exp or wants_temp
+    wants_lstm = any(
+        w in q
+        for w in (
+            "forecast",
+            "lstm",
+            "predict",
+        )
+    )
 
-    if wants_general or not specific:
+    wants_shap = any(
+        w in q
+        for w in (
+            "shap",
+            "factor",
+            "explain",
+        )
+    )
+
+    wants_exp = any(
+        w in q
+        for w in (
+            "expos",
+            "shelf",
+            "excursion",
+            "expir",
+        )
+    )
+
+    wants_general = any(
+        w in q
+        for w in (
+            "what is coldchain",
+            "what is cold chain",
+            "this system",
+            "project",
+        )
+    )
+
+    wants_full_details = any(
+        phrase in q
+        for phrase in (
+            "full details",
+            "all details",
+            "complete details",
+            "entire shipment",
+            "everything about",
+            "show all",
+            "give me details",
+        )
+    )
+
+    # ---------------------------------------------------------
+    # IMPORTANT:
+    # Specific field questions return ONLY that field.
+    # ---------------------------------------------------------
+
+    if wants_location:
+        origin = context.get("origin")
+        destination = context.get("destination")
+        latitude = context.get("latitude")
+        longitude = context.get("longitude")
+
+        location_parts = []
+
+        if origin or destination:
+            location_parts.append(
+                f"Shipment {sid}: {origin or 'Unknown'} → {destination or 'Unknown'}."
+            )
+
+        if latitude is not None and longitude is not None:
+            location_parts.append(
+                f"Current coordinates: {latitude}, {longitude}."
+            )
+
+        if location_parts:
+            return " ".join(location_parts)
+
+        return f"Current location for Shipment {sid} is not available."
+
+    if wants_temperature and not wants_risk:
+        temp = context.get("latest_temperature")
+
+        if temp is None:
+            return f"Current temperature for Shipment {sid} is not available."
+
+        return f"Shipment {sid} current temperature: {temp} °C."
+
+    if wants_humidity and not wants_temperature:
+        humidity = context.get("latest_humidity")
+
+        if humidity is None:
+            return f"Current humidity for Shipment {sid} is not available."
+
+        return f"Shipment {sid} current humidity: {humidity}%."
+
+    if wants_battery:
+        battery = context.get("latest_battery")
+
+        if battery is None:
+            return f"Battery level for Shipment {sid} is not available."
+
+        return f"Shipment {sid} battery level: {battery}%."
+
+    if wants_status:
+        status = context.get("status")
+
+        if status is None:
+            return f"Status for Shipment {sid} is not available."
+
+        return f"Shipment {sid} status: {status}."
+
+    # ---------------------------------------------------------
+    # Full shipment details
+    # ---------------------------------------------------------
+
+    if wants_full_details:
+        parts: list[str] = []
+
+        parts.append(
+            f"Shipment {sid} "
+            f"({context.get('product_name') or 'unknown product'}, "
+            f"{context.get('origin')} → {context.get('destination')}, "
+            f"status {context.get('status')})."
+        )
+
+        parts.append(
+            f"Latest temperature {context.get('latest_temperature')} °C, "
+            f"humidity {context.get('latest_humidity')}%, "
+            f"battery {context.get('latest_battery')}%."
+        )
+
+        parts.append(
+            f"Risk level: {context.get('risk_level')} "
+            f"({context.get('risk_percent')}% display score)."
+        )
+
+        parts.append(
+            f"Exposure status: {context.get('exposure_status')}, "
+            f"cumulative excursion: "
+            f"{context.get('total_excursion_minutes')} minutes."
+        )
+
+        return "\n\n".join(parts)
+
+    # ---------------------------------------------------------
+    # Detailed existing responses
+    # ---------------------------------------------------------
+
+    specific = (
+        wants_risk
+        or wants_pack
+        or wants_anom
+        or wants_rec
+        or wants_alert
+        or wants_lstm
+        or wants_shap
+        or wants_exp
+        or wants_temperature
+        or wants_humidity
+        or wants_battery
+        or wants_status
+        or wants_location
+    )
+
+    parts: list[str] = []
+
+    if wants_general:
         parts.append(PROJECT_OVERVIEW)
 
     parts.append(
-        f"Shipment {sid} ({context.get('product_name') or 'unknown product'}, "
+        f"Shipment {sid} "
+        f"({context.get('product_name') or 'unknown product'}, "
         f"{context.get('origin')} → {context.get('destination')}, "
         f"status {context.get('status')})."
     )
@@ -186,86 +481,141 @@ def fallback_reply(message: str, context: dict[str, Any] | None) -> str:
     if wants_risk or not specific:
         level = context.get("risk_level")
         pct = context.get("risk_percent")
+
         parts.append(
             f"Risk level is {level}"
             + (f" ({pct}% display score)." if pct is not None else ".")
             + f" XGBoost model risk score: {context.get('model_risk_score')}; "
             f"rule-based score: {context.get('rule_based_score')}."
         )
+
         reasons = context.get("risk_reasons") or []
+
         if reasons:
             parts.append("Why: " + " ".join(reasons[:4]))
 
-    if wants_temp or wants_exp or not specific:
+    if wants_temperature or wants_humidity or wants_exp or not specific:
         parts.append(
             f"Latest temperature {context.get('latest_temperature')} °C, "
             f"humidity {context.get('latest_humidity')}% "
             f"(allowed range {context.get('allowed_temperature')}). "
-            f"Cumulative excursion {context.get('total_excursion_minutes')} min "
-            f"({context.get('percent_readings_outside_range')}% of readings outside range); "
+            f"Cumulative excursion "
+            f"{context.get('total_excursion_minutes')} min "
+            f"({context.get('percent_readings_outside_range')}% "
+            f"of readings outside range); "
             f"exposure status {context.get('exposure_status')}. "
-            f"Remaining shelf life {context.get('remaining_shelf_life_hours')} h "
-            f"after {context.get('equivalent_age_hours')} h Q10-equivalent age."
+            f"Remaining shelf life "
+            f"{context.get('remaining_shelf_life_hours')} h "
+            f"after {context.get('equivalent_age_hours')} h "
+            f"Q10-equivalent age."
         )
 
     if wants_lstm or not specific:
         lstm = context.get("lstm") or {}
         breach = lstm.get("predicted_breach")
+
         extra = f" Predicted breach: {breach}." if breach else ""
+
         parts.append(
             f"LSTM forecast status: {lstm.get('status')}."
-            + (f" {lstm.get('detail')}" if lstm.get("detail") else "")
+            + (
+                f" {lstm.get('detail')}"
+                if lstm.get("detail")
+                else ""
+            )
             + extra
         )
 
     if wants_anom or not specific:
         an = context.get("anomaly") or {}
+
         parts.append(
             f"Autoencoder anomaly status: {an.get('status')} "
-            f"(score {an.get('score')} vs threshold {an.get('threshold')}; "
+            f"(score {an.get('score')} vs threshold "
+            f"{an.get('threshold')}; "
             f"is_anomaly={an.get('is_anomaly')})."
-            + (f" {an.get('detail')}" if an.get("detail") else "")
+            + (
+                f" {an.get('detail')}"
+                if an.get("detail")
+                else ""
+            )
         )
 
     if wants_pack or not specific:
         pk = context.get("packaging") or {}
+
         if pk.get("predicted_class"):
             parts.append(
-                f"CNN packaging condition: {pk.get('predicted_class')} "
-                f"(confidence {pk.get('confidence')}, status {pk.get('status')})."
+                f"CNN packaging condition: "
+                f"{pk.get('predicted_class')} "
+                f"(confidence {pk.get('confidence')}, "
+                f"status {pk.get('status')})."
             )
         else:
             parts.append(
                 f"CNN packaging status: {pk.get('status')}."
-                + (f" {pk.get('detail')}" if pk.get("detail") else "")
+                + (
+                    f" {pk.get('detail')}"
+                    if pk.get("detail")
+                    else ""
+                )
             )
 
     if wants_shap:
         factors = context.get("shap_top_factors") or []
+
         if factors:
             bits = [
-                f"{f.get('feature')} ({f.get('effect')}, {f.get('shap_value')})"
+                f"{f.get('feature')} "
+                f"({f.get('effect')}, {f.get('shap_value')})"
                 for f in factors[:5]
             ]
-            parts.append("Top SHAP factors: " + "; ".join(bits) + ".")
+
+            parts.append(
+                "Top SHAP factors: " + "; ".join(bits) + "."
+            )
         else:
-            parts.append("SHAP top factors are not available for this assessment.")
+            parts.append(
+                "SHAP top factors are not available for this assessment."
+            )
 
     if wants_alert or not specific:
         alerts = context.get("alerts") or []
+
         if not alerts:
-            parts.append("There are no persisted alerts for this shipment.")
+            parts.append(
+                "There are no persisted alerts for this shipment."
+            )
         else:
-            bits = [f"{a.get('type')} [{a.get('severity')}]: {a.get('message')}" for a in alerts[:5]]
-            parts.append("Alerts: " + " | ".join(bits))
+            bits = [
+                f"{a.get('type')} "
+                f"[{a.get('severity')}]: "
+                f"{a.get('message')}"
+                for a in alerts[:5]
+            ]
+
+            parts.append(
+                "Alerts: " + " | ".join(bits)
+            )
 
     if wants_rec or not specific:
         recs = context.get("recommendations") or []
+
         if not recs:
-            parts.append("No recommendations are listed for this shipment.")
+            parts.append(
+                "No recommendations are listed for this shipment."
+            )
         else:
-            bits = [f"{r.get('code')}: {r.get('action')} ({r.get('reason')})" for r in recs[:5]]
-            parts.append("Recommendations: " + " | ".join(bits))
+            bits = [
+                f"{r.get('code')}: "
+                f"{r.get('action')} "
+                f"({r.get('reason')})"
+                for r in recs[:5]
+            ]
+
+            parts.append(
+                "Recommendations: " + " | ".join(bits)
+            )
 
     if context.get("disclaimer"):
         parts.append(str(context["disclaimer"]))
@@ -273,60 +623,147 @@ def fallback_reply(message: str, context: dict[str, Any] | None) -> str:
     return "\n\n".join(parts)
 
 
-def openai_reply(message: str, context: dict[str, Any] | None) -> str | None:
+def openai_reply(
+    message: str,
+    context: dict[str, Any] | None,
+) -> str | None:
     """Call OpenAI; return None if the key is missing or the request fails."""
+
     key = (settings.openai_api_key or "").strip()
+
     if not key or key.startswith("your-openai"):
         return None
+
     import json
 
     system = (
-        "You are the ColdChain AI operator assistant. Answer only from the "
-        "provided CONTEXT and the project description. Do not invent sensor "
-        "readings or model scores. If a field is missing, say so. Be concise. "
-        "Remind the user that risk scores are demo/decision-support outputs."
+        "You are the ColdChain AI operator assistant. "
+        "Answer only from the provided CONTEXT and project description. "
+        "Do not invent sensor readings or model scores. "
+        "If a field is missing, say so. "
+        "Be concise and answer ONLY what the user asks. "
+        "If the user asks for one specific field such as location, "
+        "temperature, humidity, battery, or status, return ONLY that field "
+        "and do not provide unrelated shipment information. "
+        "If the user asks for full details, provide the relevant shipment "
+        "details. "
+        "Risk scores are demo/decision-support outputs."
     )
-    user = json.dumps({"question": message, "context": context or {"project": PROJECT_OVERVIEW}})
+
+    user = json.dumps(
+        {
+            "question": message,
+            "context": context or {"project": PROJECT_OVERVIEW},
+        }
+    )
+
     try:
         response = httpx.post(
             OPENAI_URL,
-            headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+            headers={
+                "Authorization": f"Bearer {key}",
+                "Content-Type": "application/json",
+            },
             json={
                 "model": settings.openai_model or "gpt-4o-mini",
                 "temperature": 0.2,
                 "max_tokens": 500,
                 "messages": [
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": user},
+                    {
+                        "role": "system",
+                        "content": system,
+                    },
+                    {
+                        "role": "user",
+                        "content": user,
+                    },
                 ],
             },
             timeout=20.0,
         )
+
         response.raise_for_status()
+
         data = response.json()
+
         text = data["choices"][0]["message"]["content"]
+
         return (text or "").strip() or None
-    except Exception as exc:  # noqa: BLE001 - demo must not crash
-        print(f"[chat] OpenAI request failed; using fallback ({exc})")
+
+    except Exception as exc:
+        print(
+            f"[chat] OpenAI request failed; "
+            f"using fallback ({exc})"
+        )
         return None
 
 
-def answer(db, message: str, shipment_id: int | None) -> dict[str, Any]:
+def answer(
+    db,
+    message: str,
+    shipment_id: int | None,
+) -> dict[str, Any]:
+
     context = None
+
     if shipment_id is not None:
-        context = load_shipment_context(db, shipment_id)
+        context = load_shipment_context(
+            db,
+            shipment_id,
+        )
+
         if context is None:
             return {"missing_shipment": True}
 
-    generated = openai_reply(message, context)
+    # Handle specific field questions with the deterministic fallback
+    # so the chatbot returns only the requested information.
+    q = message.lower().strip()
+
+    specific_field_question = any(
+        phrase in q
+        for phrase in (
+            "location",
+            "where is",
+            "where's",
+            "where are",
+            "current location",
+            "temperature",
+            "temp",
+            "humidity",
+            "humid",
+            "battery",
+            "status",
+        )
+    )
+
+    if specific_field_question:
+        return {
+            "reply": fallback_reply(
+                message,
+                context,
+            ),
+            "shipment_id": shipment_id,
+            "source": "fallback",
+        }
+
+    # Use OpenAI for general questions when available.
+    generated = openai_reply(
+        message,
+        context,
+    )
+
     if generated:
         return {
             "reply": generated,
             "shipment_id": shipment_id,
             "source": "openai",
         }
+
     return {
-        "reply": fallback_reply(message, context),
+        "reply": fallback_reply(
+            message,
+            context,
+        ),
         "shipment_id": shipment_id,
         "source": "fallback",
     }

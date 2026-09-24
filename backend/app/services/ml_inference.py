@@ -56,7 +56,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 settings = get_settings()
 
-DEFAULT_ARTIFACTS_DIR = PROJECT_ROOT / "ml" / "artifacts"
+DEFAULT_ARTIFACTS_DIR = PROJECT_ROOT.parent / "ml" / "artifacts"
 
 # Artifact files per model group. Missing files are reported, never faked.
 ARTIFACT_FILES: dict[str, tuple[str, ...]] = {
