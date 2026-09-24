@@ -11,14 +11,25 @@ from .config import get_settings
 
 settings = get_settings()
 
-# PostgreSQL doesn't need check_same_thread (that's a SQLite thing).
+# PostgreSQL connection pool settings.
+#
+# Render PostgreSQL has a limited number of connections, so we keep
+# the application pool small and reuse connections safely.
 engine = create_engine(
     settings.sqlalchemy_database_url,
-    pool_pre_ping=True,   # verify connections before using them
+    pool_size=3,
+    max_overflow=2,
+    pool_timeout=30,
+    pool_recycle=1800,
+    pool_pre_ping=True,
     future=True,
 )
 
-SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+SessionLocal = sessionmaker(
+    bind=engine,
+    autoflush=False,
+    autocommit=False,
+)
 
 
 class Base(DeclarativeBase):
@@ -41,4 +52,5 @@ def check_connection() -> bool:
 
     with engine.connect() as conn:
         conn.execute(text("SELECT 1"))
+
     return True
