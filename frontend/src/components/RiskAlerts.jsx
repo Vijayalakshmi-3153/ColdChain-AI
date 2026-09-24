@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { fetchAlerts } from "../api.js";
 import { fmtTime } from "../utils/formatting.js";
 
 /** Alerts list for a shipment, fetched from GET /shipments/{id}/alerts. */
@@ -12,7 +12,7 @@ export const RiskAlerts = ({ shipmentId }) => {
     if (shipmentId == null) return;
     setLoading(true);
     axios
-      .get(`/api/shipments/${shipmentId}/alerts`)
+      fetchAlerts(shipmentId)
       .then((res) => {
         setAlerts(Array.isArray(res.data) ? res.data : []);
         setError(null);

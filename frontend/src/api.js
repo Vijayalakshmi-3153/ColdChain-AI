@@ -53,3 +53,28 @@ export const acknowledgeAlert = (alertId) =>
     if (!r.ok) throw new Error(`acknowledge failed: ${r.status}`);
     return r.json();
   });
+  export const postChat = async (body) => {
+  const res = await fetch(`${API_BASE}/chat`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    let detail = `HTTP ${res.status}`;
+
+    try {
+      const json = JSON.parse(text);
+      detail = json.detail || json.message || detail;
+    } catch {
+      if (text) detail = text;
+    }
+
+    throw new Error(detail);
+  }
+
+  return res.json();
+};

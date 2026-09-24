@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { fetchJSON } from "../api.js";
 import { fmtTime, fmtTemp } from "../utils/formatting.js";
 
 const formatApiError = (err, fallback) => {
@@ -37,17 +37,18 @@ export const TelemetryPage = ({ backendOk, shipmentId }) => {
         sid = Number.isFinite(fromForm) ? fromForm : shipmentId;
       }
       if (sid == null) {
-        const ships = await axios.get("/api/shipments");
-        sid = Array.isArray(ships.data) && ships.data.length ? ships.data[0].id : null;
+        const ships = await fetchJSON("/shipments");
+        sid =
+  Array.isArray(ships) && ships.length
+    ? ships[0].shipment_id
+    : null;
       }
       if (sid == null) {
         setTelemetry([]);
         return;
       }
-      const res = await axios.get("/api/telemetry", {
-        params: { shipment_id: sid, limit: 100 },
-      });
-      setTelemetry(Array.isArray(res.data) ? res.data : []);
+      const res = await fetchJSON(`/shipments/${sid}/telemetry?limit=100`);
+      setTelemetry(Array.isArray(res) ? res : []);
     } catch (err) {
       setError(formatApiError(err, "Failed to load telemetry"));
       setTelemetry([]);
@@ -75,7 +76,17 @@ export const TelemetryPage = ({ backendOk, shipmentId }) => {
       door_open: form.door_open,
     };
     try {
-      await axios.post("/api/telemetry", payload);
+      const API_BASE = import.meta.env.PROD
+  ? "https://coldchain-backend-cfes.onrender.com"
+  : "/api";
+
+await fetch(`${API_BASE}/telemetry`, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify(payload),
+});
       setSuccessMsg(`Telemetry recorded successfully for Shipment #${payload.shipment_id}`);
       setForm({
         shipment_id: "",

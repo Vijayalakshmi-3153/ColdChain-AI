@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { fetchHealth } from "./api.js";
 import { Dashboard } from "./components/Dashboard.jsx";
 import { ShipmentDetail } from "./components/ShipmentDetail.jsx";
 import { ReportsPage } from "./components/ReportsPage.jsx";
@@ -20,8 +20,8 @@ function App() {
     const check = async () => {
       setIsUpdating(true);
       try {
-        const res = await axios.get("/api/health", { timeout: 5000 });
-        setBackendStatus(res.data.status === "ok" ? "online" : "degraded");
+        const data = await fetchHealth();
+        setBackendStatus(data.status === "ok" ? "online" : "degraded");
         setLastUpdated(new Date().toISOString());
       } catch {
         setBackendStatus("offline");

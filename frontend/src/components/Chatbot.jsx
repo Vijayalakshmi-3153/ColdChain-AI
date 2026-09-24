@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import axios from "axios";
-
+import { fetchJSON } from "../api.js";
+import { postChat } from "../api.js";
 export const Chatbot = ({ shipmentId, onOpenChange }) => {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
@@ -42,7 +42,7 @@ export const Chatbot = ({ shipmentId, onOpenChange }) => {
     try {
       const body = { message: text };
       if (shipmentId != null) body.shipment_id = shipmentId;
-      const res = await axios.post("/api/chat", body, { timeout: 30000 });
+      const data = await postChat(body);
       const reply = res.data?.reply || "No reply was returned from the AI assistant.";
       setMessages((prev) => [...prev, { role: "assistant", text: reply }]);
     } catch (err) {

@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
-import axios from "axios";
+import { fetchSummary, fetchShipments, fetchMap } from "../api.js";
 import { SummaryCards, StatusLegend } from "./SummaryCards.jsx";
 import { ShipmentTable } from "./ShipmentTable.jsx";
 import { LiveMap } from "./LiveMap.jsx";
@@ -34,25 +34,24 @@ export const Dashboard = ({ onSelectShipment }) => {
 
     try {
       const [sRes, shRes, mRes] = await Promise.allSettled([
-        axios.get("/api/dashboard/summary"),
-        axios.get("/api/dashboard/shipments"),
-        axios.get("/api/dashboard/map"),
-      ]);
-
+  fetchSummary(),
+  fetchShipments(),
+  fetchMap(),
+ ]);
       let hasSuccess = false;
 
       if (sRes.status === "fulfilled") {
-        setSummary(sRes.value.data);
+        setSummary(sRes.value);
         hasSuccess = true;
       }
 
       if (shRes.status === "fulfilled") {
-        setShipments(shRes.value.data);
+        setShipments(shRes.value);
         hasSuccess = true;
       }
 
       if (mRes.status === "fulfilled") {
-        setMapData(mRes.value.data);
+       setMapData(mRes.value);
         hasSuccess = true;
       }
 

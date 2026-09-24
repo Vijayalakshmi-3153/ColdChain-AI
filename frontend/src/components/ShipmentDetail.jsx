@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import axios from "axios";
+import { fetchJSON } from "../api.js";
 import { ShipmentBody } from "./ShipmentDetailBody.jsx";
 
 /**
@@ -31,20 +31,22 @@ export const ShipmentDetail = ({ shipmentId, onBack, onSelectShipment }) => {
   // Load available shipments for the selector dropdown
   useEffect(() => {
     let cancelled = false;
-    axios
-      .get("/api/dashboard/shipments")
-      .then((res) => {
-        if (!cancelled && Array.isArray(res.data)) {
-          setShipmentsList(res.data);
+
+    fetchJSON("/dashboard/shipments")
+      .then((data) => {
+        if (!cancelled && Array.isArray(data)) {
+          setShipmentsList(data);
+
           // If no shipment was initially selected, pick the first one
-          if (currentId == null && res.data.length > 0) {
-            const firstId = res.data[0].shipment_id;
+          if (currentId == null && data.length > 0) {
+            const firstId = data[0].shipment_id;
             setCurrentId(firstId);
             onSelectShipment?.(firstId);
           }
         }
       })
       .catch(() => {});
+
     return () => {
       cancelled = true;
     };
@@ -53,48 +55,81 @@ export const ShipmentDetail = ({ shipmentId, onBack, onSelectShipment }) => {
   const fetchData = useCallback(
     async (opts = {}) => {
       if (currentId == null) return;
+
       const quiet = Boolean(opts.quiet);
+
       if (!quiet) setLoading(true);
+
       setIsUpdating(true);
       setError(null);
 
       try {
         const refresh = opts.refresh ? "&refresh=true" : "";
+
         const [riskRes, telRes, alertRes] = await Promise.allSettled([
-          axios.get(`/api/shipments/${currentId}/risk?include_shap=true${refresh}`),
-          axios.get(`/api/shipments/${currentId}/telemetry?limit=500`),
-          axios.get(`/api/shipments/${currentId}/alerts`),
+          fetchJSON(
+            `/shipments/${currentId}/risk?include_shap=true${refresh}`
+          ),
+
+          fetchJSON(
+            `/shipments/${currentId}/telemetry?limit=500`
+          ),
+
+          fetchJSON(
+            `/shipments/${currentId}/alerts`
+          ),
         ]);
 
+        // Risk
         if (riskRes.status === "fulfilled") {
-          setRisk(riskRes.value.data);
+          setRisk(riskRes.value);
           setLastUpdated(new Date().toISOString());
         } else {
           setRisk(null);
+
           const detail =
-            riskRes.reason?.response?.data?.detail ||
             riskRes.reason?.message ||
             "Unable to fetch live data for this shipment";
+
           setError(detail);
         }
 
+        // Telemetry
         if (telRes.status === "fulfilled") {
-          setTelemetry(Array.isArray(telRes.value.data) ? telRes.value.data : []);
+          setTelemetry(
+            Array.isArray(telRes.value)
+              ? telRes.value
+              : []
+          );
+
           setTelemetryError(null);
         } else {
           setTelemetry([]);
-          setTelemetryError(telRes.reason?.message || "Telemetry unavailable");
+
+          setTelemetryError(
+            telRes.reason?.message ||
+            "Telemetry unavailable"
+          );
         }
 
+        // Alerts
         if (alertRes.status === "fulfilled") {
-          setAlerts(Array.isArray(alertRes.value.data) ? alertRes.value.data : []);
+          setAlerts(
+            Array.isArray(alertRes.value)
+              ? alertRes.value
+              : []
+          );
         } else {
           setAlerts([]);
         }
       } catch (err) {
-        setError(err.message || "Unable to fetch live data");
+        setError(
+          err.message ||
+          "Unable to fetch live data"
+        );
       } finally {
         if (!quiet) setLoading(false);
+
         setIsUpdating(false);
       }
     },
@@ -103,18 +138,49 @@ export const ShipmentDetail = ({ shipmentId, onBack, onSelectShipment }) => {
 
   const uploadPackaging = async (file) => {
     if (!file || currentId == null) return;
+
     setPackagingBusy(true);
     setPackagingError(null);
+
     const form = new FormData();
     form.append("file", file);
+
     try {
-      await axios.post(`/api/shipments/${currentId}/packaging`, form);
-      await fetchData({ quiet: true, refresh: true });
+      const response = await fetch(
+        `https://coldchain-backend-cfes.onrender.com/shipments/${currentId}/packaging`,
+        {
+          method: "POST",
+          body: form,
+        }
+      );
+
+      if (!response.ok) {
+        const text = await response.text().catch(() => "");
+
+        let detail = `HTTP ${response.status}`;
+
+        try {
+          const json = JSON.parse(text);
+          detail =
+            json.detail ||
+            json.message ||
+            detail;
+        } catch {
+          if (text) detail = text;
+        }
+
+        throw new Error(detail);
+      }
+
+      await fetchData({
+        quiet: true,
+        refresh: true,
+      });
     } catch (err) {
       const detail =
-        err?.response?.data?.detail ||
-        err.message ||
+        err?.message ||
         "Packaging upload failed";
+
       setPackagingError(detail);
     } finally {
       setPackagingBusy(false);
@@ -124,9 +190,13 @@ export const ShipmentDetail = ({ shipmentId, onBack, onSelectShipment }) => {
   useEffect(() => {
     if (currentId != null) {
       fetchData();
+
       const id = setInterval(() => {
-        fetchData({ quiet: true });
+        fetchData({
+          quiet: true,
+        });
       }, 15000);
+
       return () => clearInterval(id);
     }
   }, [currentId, fetchData]);
@@ -153,7 +223,12 @@ export const ShipmentDetail = ({ shipmentId, onBack, onSelectShipment }) => {
       onUploadPackaging={uploadPackaging}
       packagingBusy={packagingBusy}
       packagingError={packagingError}
-      onRefreshLive={() => fetchData({ quiet: false, refresh: true })}
+      onRefreshLive={() =>
+        fetchData({
+          quiet: false,
+          refresh: true,
+        })
+      }
     />
   );
 };

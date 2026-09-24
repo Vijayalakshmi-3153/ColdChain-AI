@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import axios from "axios";
+import { fetchShipments, fetchRisk, fetchTelemetry, fetchAlerts } from "../api.js";
 import { fmtTime, fmtTimeOnly, fmtTemp, riskColor, riskBgColor, riskBorderColor } from "../utils/formatting.js";
 import { TemperatureChart } from "./Charts.jsx";
 
@@ -19,11 +19,10 @@ export const ReportsPage = ({ shipmentId, onSelectShipment }) => {
     let cancelled = false;
     setShipmentsLoading(true);
 
-    axios
-      .get("/api/dashboard/shipments")
-      .then((res) => {
-        if (!cancelled) {
-          const list = Array.isArray(res.data) ? res.data : [];
+   fetchShipments()
+      .then((data) => {
+  if (!cancelled) {
+    const list = Array.isArray(data) ? data : [];
           setShipments(list);
           if (!selectedId && list.length > 0) {
             setSelectedId(list[0].shipment_id);
@@ -51,26 +50,26 @@ export const ReportsPage = ({ shipmentId, onSelectShipment }) => {
 
     try {
       const [rRes, tRes, aRes] = await Promise.allSettled([
-        axios.get(`/api/shipments/${id}/risk?include_shap=true`),
-        axios.get(`/api/shipments/${id}/telemetry?limit=500`),
-        axios.get(`/api/shipments/${id}/alerts`),
-      ]);
+  fetchRisk(id),
+  fetchTelemetry(id),
+  fetchAlerts(id),
+]);
 
       if (rRes.status === "fulfilled") {
-        setRiskData(rRes.value.data);
+        setRiskData(rRes.value);
       } else {
         setRiskData(null);
         setError("Unable to fetch live risk assessment for Shipment #" + id);
       }
 
       if (tRes.status === "fulfilled") {
-        setTelemetryData(Array.isArray(tRes.value.data) ? tRes.value.data : []);
+       setTelemetryData(Array.isArray(tRes.value) ? tRes.value : []);
       } else {
         setTelemetryData([]);
       }
 
       if (aRes.status === "fulfilled") {
-        setAlertsData(Array.isArray(aRes.value.data) ? aRes.value.data : []);
+       setAlertsData(Array.isArray(aRes.value) ? aRes.value : []);
       } else {
         setAlertsData([]);
       }
