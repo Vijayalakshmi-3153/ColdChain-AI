@@ -666,17 +666,16 @@ def explain_prediction(features: dict[str, float], top: int = 8) -> dict[str, An
             ).ravel()[0]
         )
         factors = contributions(row, feature_names, top=top)
-
     except Exception as exc:
-        import traceback
-        traceback.print_exc()
+         print(f"SHAP_ERROR_TYPE: {type(exc).__name__}", flush=True)
+         print(f"SHAP_ERROR_MESSAGE: {exc}", flush=True)
 
-        return {
-            "status": "error",
-            "top_factors": None,
-            "base_value": None,
-            "detail": f"SHAP explanation failed: {type(exc).__name__}: {exc}",
-        }
+    return {
+        "status": "error",
+        "top_factors": None,
+        "base_value": None,
+        "detail": f"SHAP explanation failed: {type(exc).__name__}: {exc}",
+    }
 
 
 def global_importance(top: int = 10) -> list[dict] | None:
