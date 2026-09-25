@@ -14,27 +14,36 @@ from ml.utils.common import ARTIFACTS, fit_matrices, load_json, save_json  # noq
 
 
 def shap_values(model, X):
-    """SHAP values for an XGBoost tree model over rows of X."""
-    import shap
+    """Return native XGBoost TreeSHAP contributions.
+
+    Uses XGBoost's native pred_contribs path instead of
+    shap.TreeExplainer, avoiding SHAP/XGBoost model-format
+    compatibility issues such as base_score='[5E-1]'.
+    """
     import numpy as np
 
     X = np.asarray(X, dtype=np.float32)
 
-    explainer = shap.TreeExplainer(
-        model,
-        feature_perturbation="tree_path_dependent"
+    booster = model.get_booster()
+
+    contributions = booster.predict(
+        X,
+        pred_contribs=True
     )
 
-    explanation = explainer(X)
+    contributions = np.asarray(
+        contributions,
+        dtype=np.float64
+    )
 
-    values = explanation.values
+    # XGBoost returns:
+    # [feature_1, feature_2, ..., feature_n, bias]
+    # Remove the final bias column because the existing
+    # contributions() helper expects one value per feature.
+    if contributions.ndim == 2:
+        contributions = contributions[:, :-1]
 
-    # Handle binary-class output shape if returned as 3D
-    if values.ndim == 3:
-        values = values[:, :, 0]
-
-    return np.asarray(values, dtype=np.float64)
-
+    return contributions
 def global_importance(sv, feature_names):
     """Global feature importance = mean(|SHAP|), sorted descending."""
     imp = np.abs(np.asarray(sv)).mean(axis=0)
