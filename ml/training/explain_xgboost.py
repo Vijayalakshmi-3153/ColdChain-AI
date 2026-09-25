@@ -16,6 +16,7 @@ from ml.utils.common import ARTIFACTS, fit_matrices, load_json, save_json  # noq
 def shap_values(model, X):
     """Return native XGBoost feature contributions."""
     import numpy as np
+    import xgboost as xgb
 
     X = np.asarray(X, dtype=np.float32)
 
@@ -23,8 +24,10 @@ def shap_values(model, X):
 
     print("NATIVE_XGBOOST_SHAP: starting", flush=True)
 
+    dmatrix = xgb.DMatrix(X)
+
     result = booster.predict(
-        X,
+        dmatrix,
         pred_contribs=True
     )
 
