@@ -14,10 +14,13 @@ from ml.utils.common import ARTIFACTS, fit_matrices, load_json, save_json  # noq
 
 
 def shap_values(model, X):
-    """SHAP values for a tree model over rows of X (n_samples, n_features)."""
+    """SHAP values for an XGBoost tree model over rows of X."""
     import shap
-    return shap.TreeExplainer(model).shap_values(X)
 
+    explainer = shap.TreeExplainer(model)
+    explanation = explainer(X)
+
+    return explanation.values
 
 def global_importance(sv, feature_names):
     """Global feature importance = mean(|SHAP|), sorted descending."""
