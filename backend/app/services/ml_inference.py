@@ -641,6 +641,7 @@ def predict_spoilage_risk(features: dict[str, float]) -> dict[str, Any]:
 
 def explain_prediction(features: dict[str, float], top: int = 8) -> dict[str, Any]:
     """MODEL OUTPUT: SHAP top contributing factors for the current feature row."""
+
     if not settings.ml_shap_enabled:
         return {
             "status": "disabled",
@@ -672,23 +673,20 @@ def explain_prediction(features: dict[str, float], top: int = 8) -> dict[str, An
     X, _ = _feature_vector(features, feature_names)
 
     try:
-        import shap
         from ml.training.explain_xgboost import contributions, shap_values
 
         row = np.asarray(shap_values(model, X))[0]
 
-        base = float(
-            np.asarray(
-                shap.TreeExplainer(model).expected_value
-            ).ravel()[0]
+        factors = contributions(
+            row,
+            feature_names,
+            top=top,
         )
-
-        factors = contributions(row, feature_names, top=top)
 
         return {
             "status": "ok",
             "top_factors": factors,
-            "base_value": round(base, 6),
+            "base_value": None,
             "detail": (
                 "SHAP attributes the XGBoost Model Output "
                 "(log-odds space) to individual features."
@@ -696,8 +694,14 @@ def explain_prediction(features: dict[str, float], top: int = 8) -> dict[str, An
         }
 
     except Exception as exc:
-        print(f"SHAP_ERROR_TYPE: {type(exc).__name__}", flush=True)
-        print(f"SHAP_ERROR_MESSAGE: {exc}", flush=True)
+        print(
+            f"SHAP_ERROR_TYPE: {type(exc).__name__}",
+            flush=True,
+        )
+        print(
+            f"SHAP_ERROR_MESSAGE: {exc}",
+            flush=True,
+        )
 
         return {
             "status": "error",
@@ -708,7 +712,6 @@ def explain_prediction(features: dict[str, float], top: int = 8) -> dict[str, An
                 f"{type(exc).__name__}: {exc}"
             ),
         }
-
 def global_importance(top: int = 10) -> list[dict] | None:
     """MODEL OUTPUT: pre-computed global SHAP importance from Step 4 artifacts."""
     meta = registry.meta("shap")
