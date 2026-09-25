@@ -5,7 +5,7 @@ import { ShipmentTable } from "./ShipmentTable.jsx";
 import { LiveMap } from "./LiveMap.jsx";
 import { fmtTemp, fmtTimeOnly, riskColor } from "../utils/formatting.js";
 
-const POLL_MS = 15000;
+const POLL_MS = 60000;
 
 /**
  * Main Dashboard Page:
