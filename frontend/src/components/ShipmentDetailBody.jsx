@@ -150,8 +150,12 @@ export const ShipmentBody = ({
   const forecast = risk.lstm_forecast || {};
   const anomaly = risk.anomaly || {};
   const packaging = risk.packaging || {};
-  const shap = risk.shap || {};
-  const shapTop = risk.shap_top_factors || shap.top_factors || [];
+  const shap = {
+  status: risk.shap_status,
+  detail: risk.shap_detail,
+};
+
+const shapTop = risk.shap_top_factors || [];[];
   const model = risk.model_result || {};
   const threshold = risk.thresholds || {};
   const telemetryPoints = telemetry || [];
