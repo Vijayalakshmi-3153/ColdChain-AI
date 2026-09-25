@@ -657,13 +657,17 @@ def explain_prediction(features: dict[str, float], top: int = 8) -> dict[str, An
     X, _ = _feature_vector(features, feature_names)
     try:
         import shap
-
         from ml.training.explain_xgboost import contributions, shap_values
 
         row = np.asarray(shap_values(model, X))[0]
-        base = float(np.asarray(shap.TreeExplainer(model).expected_value).ravel()[0])
+        base = float(
+            np.asarray(
+                shap.TreeExplainer(model).expected_value
+            ).ravel()[0]
+        )
         factors = contributions(row, feature_names, top=top)
-       except Exception as exc:
+
+    except Exception as exc:
         import traceback
         traceback.print_exc()
 
@@ -673,12 +677,6 @@ def explain_prediction(features: dict[str, float], top: int = 8) -> dict[str, An
             "base_value": None,
             "detail": f"SHAP explanation failed: {type(exc).__name__}: {exc}",
         }
-    return {
-        "status": "ok",
-        "top_factors": factors,
-        "base_value": round(base, 6),
-        "detail": "SHAP attributes the XGBoost Model Output (log-odds space) to individual features.",
-    }
 
 
 def global_importance(top: int = 10) -> list[dict] | None:
