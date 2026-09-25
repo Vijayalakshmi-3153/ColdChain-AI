@@ -642,41 +642,72 @@ def predict_spoilage_risk(features: dict[str, float]) -> dict[str, Any]:
 def explain_prediction(features: dict[str, float], top: int = 8) -> dict[str, Any]:
     """MODEL OUTPUT: SHAP top contributing factors for the current feature row."""
     if not settings.ml_shap_enabled:
-        return {"status": "disabled", "top_factors": None, "base_value": None,
-                "detail": "SHAP disabled via ML_SHAP_ENABLED=false"}
+        return {
+            "status": "disabled",
+            "top_factors": None,
+            "base_value": None,
+            "detail": "SHAP disabled via ML_SHAP_ENABLED=false",
+        }
+
     if not registry.status()["xgboost"].available:
-        return {"status": "unavailable", "top_factors": None, "base_value": None,
-                "detail": registry.status()["xgboost"].detail}
+        return {
+            "status": "unavailable",
+            "top_factors": None,
+            "base_value": None,
+            "detail": registry.status()["xgboost"].detail,
+        }
 
     model = registry.xgboost_model()
     meta = registry.meta("xgboost")
+
     if model is None or not meta:
-        return {"status": "unavailable", "top_factors": None, "base_value": None,
-                "detail": registry.status()["xgboost"].detail}
+        return {
+            "status": "unavailable",
+            "top_factors": None,
+            "base_value": None,
+            "detail": registry.status()["xgboost"].detail,
+        }
+
     feature_names = meta.get("features", [])
     X, _ = _feature_vector(features, feature_names)
+
     try:
         import shap
         from ml.training.explain_xgboost import contributions, shap_values
 
         row = np.asarray(shap_values(model, X))[0]
+
         base = float(
             np.asarray(
                 shap.TreeExplainer(model).expected_value
             ).ravel()[0]
         )
+
         factors = contributions(row, feature_names, top=top)
+
+        return {
+            "status": "ok",
+            "top_factors": factors,
+            "base_value": round(base, 6),
+            "detail": (
+                "SHAP attributes the XGBoost Model Output "
+                "(log-odds space) to individual features."
+            ),
+        }
+
     except Exception as exc:
-         print(f"SHAP_ERROR_TYPE: {type(exc).__name__}", flush=True)
-         print(f"SHAP_ERROR_MESSAGE: {exc}", flush=True)
+        print(f"SHAP_ERROR_TYPE: {type(exc).__name__}", flush=True)
+        print(f"SHAP_ERROR_MESSAGE: {exc}", flush=True)
 
-    return {
-        "status": "error",
-        "top_factors": None,
-        "base_value": None,
-        "detail": f"SHAP explanation failed: {type(exc).__name__}: {exc}",
-    }
-
+        return {
+            "status": "error",
+            "top_factors": None,
+            "base_value": None,
+            "detail": (
+                f"SHAP explanation failed: "
+                f"{type(exc).__name__}: {exc}"
+            ),
+        }
 
 def global_importance(top: int = 10) -> list[dict] | None:
     """MODEL OUTPUT: pre-computed global SHAP importance from Step 4 artifacts."""
