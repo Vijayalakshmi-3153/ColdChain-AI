@@ -663,10 +663,16 @@ def explain_prediction(features: dict[str, float], top: int = 8) -> dict[str, An
         row = np.asarray(shap_values(model, X))[0]
         base = float(np.asarray(shap.TreeExplainer(model).expected_value).ravel()[0])
         factors = contributions(row, feature_names, top=top)
-    except Exception as exc:  # noqa: BLE001
-        return {"status": "error", "top_factors": None, "base_value": None,
-                "detail": f"SHAP explanation failed: {exc}"}
+    except Exception as exc:
+     import traceback
+    traceback.print_exc()
 
+    return {
+        "status": "error",
+        "top_factors": None,
+        "base_value": None,
+        "detail": f"SHAP explanation failed: {type(exc).__name__}: {exc}",
+    }
     return {
         "status": "ok",
         "top_factors": factors,
