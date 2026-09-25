@@ -16,11 +16,24 @@ from ml.utils.common import ARTIFACTS, fit_matrices, load_json, save_json  # noq
 def shap_values(model, X):
     """SHAP values for an XGBoost tree model over rows of X."""
     import shap
+    import numpy as np
 
-    explainer = shap.TreeExplainer(model)
+    X = np.asarray(X, dtype=np.float32)
+
+    explainer = shap.TreeExplainer(
+        model,
+        feature_perturbation="tree_path_dependent"
+    )
+
     explanation = explainer(X)
 
-    return explanation.values
+    values = explanation.values
+
+    # Handle binary-class output shape if returned as 3D
+    if values.ndim == 3:
+        values = values[:, :, 0]
+
+    return np.asarray(values, dtype=np.float64)
 
 def global_importance(sv, feature_names):
     """Global feature importance = mean(|SHAP|), sorted descending."""
