@@ -14,36 +14,37 @@ from ml.utils.common import ARTIFACTS, fit_matrices, load_json, save_json  # noq
 
 
 def shap_values(model, X):
-    """Return native XGBoost TreeSHAP contributions.
-
-    Uses XGBoost's native pred_contribs path instead of
-    shap.TreeExplainer, avoiding SHAP/XGBoost model-format
-    compatibility issues such as base_score='[5E-1]'.
-    """
+    """Return native XGBoost feature contributions."""
     import numpy as np
 
     X = np.asarray(X, dtype=np.float32)
 
     booster = model.get_booster()
 
-    contributions = booster.predict(
+    print("NATIVE_XGBOOST_SHAP: starting", flush=True)
+
+    result = booster.predict(
         X,
         pred_contribs=True
     )
 
-    contributions = np.asarray(
-        contributions,
-        dtype=np.float64
+    result = np.asarray(result, dtype=np.float64)
+
+    print(
+        f"NATIVE_XGBOOST_SHAP: shape={result.shape}",
+        flush=True
     )
 
-    # XGBoost returns:
-    # [feature_1, feature_2, ..., feature_n, bias]
-    # Remove the final bias column because the existing
-    # contributions() helper expects one value per feature.
-    if contributions.ndim == 2:
-        contributions = contributions[:, :-1]
+    # Last column is the bias/base contribution.
+    if result.ndim == 2 and result.shape[1] == X.shape[1] + 1:
+        result = result[:, :-1]
 
-    return contributions
+    print(
+        f"NATIVE_XGBOOST_SHAP: final_shape={result.shape}",
+        flush=True
+    )
+
+    return result
 def global_importance(sv, feature_names):
     """Global feature importance = mean(|SHAP|), sorted descending."""
     imp = np.abs(np.asarray(sv)).mean(axis=0)
